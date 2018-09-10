@@ -21,3 +21,7 @@ sudo apt-get install python-dev
 git clone https://github.com/adafruit/Adafruit_Python_DHT
 cd Adafruit\_Python\_DHT && sudo python setup.py install
 ```
+- Install Crypto Library
+```
+sudo pip install pycrypto
+```
