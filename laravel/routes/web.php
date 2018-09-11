@@ -11,8 +11,12 @@
 |
 */
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-});
+Route::get('/', 'PageController@index');
 
-Route::get('/', 'HomeController@index');
+Route::get('/dashboard', 'PageController@dashboard');
+
+Route::get('/api/plantdata/{id}', 'PageController@plantdata');
+
+Route::get('/api/plantdefault/{id}', 'PageController@plantdefault');
+
+Route::get('/api/insert/{token}/{plantId}/{temp}/{humidity}', 'SenseController@insertPlantData');

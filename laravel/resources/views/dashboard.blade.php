@@ -10,7 +10,7 @@
 @endsection
 
 @section('main-content')
-    <div class="container-fluid" style="margin-top: 0">
+    <div class="container-fluid" style="padding-bottom: 30px">
         <div class="row">
             <nav class="col-md-2 d-none d-md-block bg-light sidebar">
                 <div class="sidebar-sticky">
