@@ -11,6 +11,7 @@ import time                         # Import time to make the delays
 import Adafruit_DHT                 # Call the DHT Lib
 
 ################# Settings ################# 
+plantID = 1                         # ID of the plant (Type of plant)
 motorPin = 2                        # GPIO of the motorPin
 sensorPin = 21                      # GPIO of the moisture sensor
 ############################################
@@ -21,7 +22,6 @@ apilink = "http://janvetq144.144.axc.nl/" # API link. Altijd inclusief '/' !
 ############## End settings ################ 
 
 sense = SenseHat()
-
 GPIO.setmode(GPIO.BCM)              # Define the BCM headers          
 GPIO.setup(motorPin, GPIO.OUT)      # Define motor Pin Mode                 
 GPIO.output(motorPin, 0)            # Set motorpin low to be sure
@@ -51,47 +51,47 @@ def uploadData():
     cipher= AES.new(key=secret,mode=AES.MODE_CBC,IV=iv)
     encoded = EncodeAES(cipher, currentDate)
     sendtoken = encoded.decode('utf-8')
-    link = apilink + "api.php?token=%s&temp=%s&humidity=%s" % (sendtoken, temperature, humidity)
+    #link = apilink + "api.php?token=%s&temp=%s&humidity=%s" % (sendtoken, temperature, humidity)
+    link = apilink + "api/%s/%s/%s/%s/" % (sendtoken, plantID, temperature, humidity)
     result = requests.get(link)
 
     print(link) #just for debug :3
     print (result.text) # OK = Data updated.
 
+def checkSetLight():
+    link = apilink + "api.php"
+    respone = requests.get(link)
+    lightResponse = respone.text
+    if lightResponse:
+        print("Lights on!")
+    else:
+        print("Lights off!")
+
 def setSmiley(type):
     if type == "angry" :
-    	sense.set_pixel(2, 2, (255, 0, 0))
-		sense.set_pixel(5, 2, (255, 0, 0))
-		sense.set_pixel(2, 5, (255, 0, 0))
-		sense.set_pixel(4, 5, (255, 0, 0))
-		sense.set_pixel(5, 5, (255, 0, 0))
-		sense.set_pixel(5, 5, (255, 0, 0))
-		sense.set_pixel(1, 6, (255, 0, 0))
-		sense.set_pixel(6, 6, (255, 0, 0))
-		sense.set_pixel(3, 5, (255, 0, 0))
-        print("Boos")
+        sense.set_pixel(2, 2, (255, 0, 0))
+        sense.set_pixel(5, 2, (255, 0, 0))
+        sense.set_pixel(2, 5, (255, 0, 0))
+        sense.set_pixel(4, 5, (255, 0, 0))
+        sense.set_pixel(5, 5, (255, 0, 0))
+        sense.set_pixel(5, 5, (255, 0, 0))
+        sense.set_pixel(1, 6, (255, 0, 0))
+        sense.set_pixel(6, 6, (255, 0, 0))
+        sense.set_pixel(3, 5, (255, 0, 0))
+        print("Plant is not happy")
     else:
-		sense.set_pixel(2, 2, (0, 255, 0))
-		sense.set_pixel(5, 2, (0, 255, 0))
-		sense.set_pixel(1, 5, (0, 255, 0))
-		sense.set_pixel(2, 6, (0, 255, 0))
-		sense.set_pixel(3, 6, (0, 255, 0))
-		sense.set_pixel(4, 6, (0, 255, 0))
-		sense.set_pixel(6, 5, (0, 255, 0))
-		sense.set_pixel(5, 6, (0, 255, 0))
-        print("Happy!")
-
-
-def checkSetLights():
-    link = apilink + "api.php?call=date"
-    respone = requests.get(link)
-    activeLed = respone.text
-    if activeLed == True:
-    	print("Led on!")
-    else:
-    	print("Led off!")
-
+        sense.set_pixel(2, 2, (0, 255, 0))
+        sense.set_pixel(5, 2, (0, 255, 0))
+        sense.set_pixel(1, 5, (0, 255, 0))
+        sense.set_pixel(2, 6, (0, 255, 0))
+        sense.set_pixel(3, 6, (0, 255, 0))
+        sense.set_pixel(4, 6, (0, 255, 0))
+        sense.set_pixel(6, 5, (0, 255, 0))
+        sense.set_pixel(5, 6, (0, 255, 0))
+        print("Plant is happy!")
 try:  
     while True:
+        sense.clear()
         if GPIO.input(sensorPin):
             print("No need!")       # No water needed Plant is happy
             setSmiley("happy")
@@ -99,12 +99,11 @@ try:
             print("Need water")     # Water needed. Plant is sad.
             setSmiley("angry")
             runPump()               # Run the Pump 
-        uploadData()				# Call the Data Uploader
-        checkSetLights()			# Run the routine to check lights should be on
+        uploadData()
+        checkSetLight()             # Call the light check function
         time.sleep(5)               # Delay to slow down the while
         
 except KeyboardInterrupt:        
     GPIO.output(motorPin, 0)        # Turn off the motor   
     GPIO.cleanup()                  # Clean the pins in this script
  
-

@@ -20,6 +20,7 @@ class CreateSensedataTable extends Migration
             $table->integer('humidity');
             $table->integer('plant_id');
             $table->integer('sunhours');
+            $table->foreign('plant_id')->reference('id')->on('senseplants');
         });
     }
 
