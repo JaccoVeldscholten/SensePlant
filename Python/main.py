@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from sense_hat import SenseHat
 from Crypto.Cipher import AES
 import base64                       # Get Base64 encryption
 import os                           # Using simple python scripts
@@ -8,7 +9,6 @@ import threading                    # import to make more threads
 import RPi.GPIO as GPIO             # import RPi.GPIO module  
 import time                         # Import time to make the delays
 import Adafruit_DHT                 # Call the DHT Lib
-
 
 ################# Settings ################# 
 motorPin = 2                        # GPIO of the motorPin
@@ -20,7 +20,8 @@ block_size  = 128                   # Block grootte voor AES (Altijd 128)
 apilink = "http://janvetq144.144.axc.nl/" # API link. Altijd inclusief '/' !
 ############## End settings ################ 
 
-humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, 4)
+sense = SenseHat()
+
 GPIO.setmode(GPIO.BCM)              # Define the BCM headers          
 GPIO.setup(motorPin, GPIO.OUT)      # Define motor Pin Mode                 
 GPIO.output(motorPin, 0)            # Set motorpin low to be sure
@@ -32,6 +33,7 @@ def runPump():
     GPIO.output(motorPin, 0)        # Turn of the pump
 
 def uploadData():
+    humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT22, 4)
     humidity = round(humidity, 2)
     temperature = round(temperature, 2)
     link = apilink + "api.php?call=time"
@@ -49,23 +51,60 @@ def uploadData():
     cipher= AES.new(key=secret,mode=AES.MODE_CBC,IV=iv)
     encoded = EncodeAES(cipher, currentDate)
     sendtoken = encoded.decode('utf-8')
-    link = apilink + "api.php?token=%s&temp=%s&humidity=humidity" % (sendtoken, temperature, humidity)
+    link = apilink + "api.php?token=%s&temp=%s&humidity=%s" % (sendtoken, temperature, humidity)
     result = requests.get(link)
 
     print(link) #just for debug :3
     print (result.text) # OK = Data updated.
 
+def setSmiley(type):
+    if type == "angry" :
+    	sense.set_pixel(2, 2, (255, 0, 0))
+		sense.set_pixel(5, 2, (255, 0, 0))
+		sense.set_pixel(2, 5, (255, 0, 0))
+		sense.set_pixel(4, 5, (255, 0, 0))
+		sense.set_pixel(5, 5, (255, 0, 0))
+		sense.set_pixel(5, 5, (255, 0, 0))
+		sense.set_pixel(1, 6, (255, 0, 0))
+		sense.set_pixel(6, 6, (255, 0, 0))
+		sense.set_pixel(3, 5, (255, 0, 0))
+        print("Boos")
+    else:
+		sense.set_pixel(2, 2, (0, 255, 0))
+		sense.set_pixel(5, 2, (0, 255, 0))
+		sense.set_pixel(1, 5, (0, 255, 0))
+		sense.set_pixel(2, 6, (0, 255, 0))
+		sense.set_pixel(3, 6, (0, 255, 0))
+		sense.set_pixel(4, 6, (0, 255, 0))
+		sense.set_pixel(6, 5, (0, 255, 0))
+		sense.set_pixel(5, 6, (0, 255, 0))
+        print("Happy!")
+
+
+def checkSetLights():
+    link = apilink + "api.php?call=date"
+    respone = requests.get(link)
+    activeLed = respone.text
+    if activeLed == True:
+    	print("Led on!")
+    else:
+    	print("Led off!")
+
 try:  
     while True:
         if GPIO.input(sensorPin):
             print("No need!")       # No water needed Plant is happy
+            setSmiley("happy")
         else:
             print("Need water")     # Water needed. Plant is sad.
+            setSmiley("angry")
             runPump()               # Run the Pump 
-        uploadData()
+        uploadData()				# Call the Data Uploader
+        checkSetLights()			# Run the routine to check lights should be on
         time.sleep(5)               # Delay to slow down the while
         
 except KeyboardInterrupt:        
     GPIO.output(motorPin, 0)        # Turn off the motor   
     GPIO.cleanup()                  # Clean the pins in this script
  
+
