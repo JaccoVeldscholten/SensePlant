@@ -49,7 +49,7 @@ def uploadData():
     cipher= AES.new(key=secret,mode=AES.MODE_CBC,IV=iv)
     encoded = EncodeAES(cipher, currentDate)
     sendtoken = encoded.decode('utf-8')
-    link = apilink + "api.php?token=%s&temp=%s&humidity=humidity" % (sendtoken, temperature,humidity)
+    link = apilink + "api.php?token=%s&temp=%s&humidity=humidity" % (sendtoken, temperature, humidity)
     result = requests.get(link)
 
     print(link) #just for debug :3
