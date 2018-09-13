@@ -11,7 +11,7 @@ import time                         # Import time to make the delays
 import Adafruit_DHT                 # Call the DHT Lib
 
 ################# Settings #################
-plantID = 2                         # Plant ID 
+plantID = 1	                        # Plant ID 
 motorPin = 26                       # GPIO of the motorPin USE 26!! NEVER USE GPIO 2!!!!!!!
 sensorPin = 21                      # GPIO of the moisture sensor
 ledStripPin = 19
@@ -19,8 +19,8 @@ ledStripPin = 19
 salt = "K8q44XTKsQer"               # Zorg dat de salt altijd even lang is! (12 Chars)
 iv   = "NzUXWTXMAw3HjEi3"           # Zorg dat de salt altijd even lang is! (16 Chars)
 block_size  = 128                   # Block grootte voor AES (Altijd 128)
-apilink = "https://windeswiet.nl/" # API link. Altijd inclusief '/' !
-serverLink = "http://janvetq144.144.axc.nl/"
+apilink = "https://windeswiet.nl/" 	# API link. Altijd inclusief '/' !
+serverLink = "http://janvetq144.144.axc.nl/"	#Sync Link
 ############## End settings ################ 
 
 sense = SenseHat()					# Name sense hat
@@ -65,12 +65,13 @@ def uploadData():
     encoded = EncodeAES(cipher, currentDate)							# Data to encode with the Cipher and variable date
     sendtoken = encoded.decode('utf-8')									# Convert to usable UTF-8 Data because we are sending an request
     sendtoken = sendtoken.replace('/','')								# Replace / because we use laravel. Encoded data might be using /
-    #link = serverLink + "api.php?token=%s&temp=%s&humidity=%s" % (sendtoken, temperature, humidity)
-    #link = apilink + "public/api/insert/%s/%s/%s/%s" % (sendtoken, plantID, temperature, humidity)
+    link = apilink + "public/api/insert/%s/%s/%s/%s" % (sendtoken, plantID, temperature, humidity)
     result = requests.get(link)
-
     print(link) 														# Print the exact link for debugging 
-    print (result.text) 												# Read the response for debugging
+    if result.text == "OK":
+    	print("Data commited")
+    else:
+    	print("Host down. Check API link")
 
 def setSmiley(type):
     if type == "sad" :
@@ -99,10 +100,10 @@ def setSmiley(type):
 
 
 def checkSetLights():
-    link = apilink + "api.php?call=date"	# Call the API to check the status
+    link = apilink + "public/api/light/%s" % (plantID) 	# Call the API to check the status
     respone = requests.get(link)			# Receiving response
     activeLed = respone.text				# Response to variable
-    if activeLed == True:
+    if activeLed == "True":
     	print("Led on!")					# Turn the led strip on
     	GPIO.output(ledStripPin, 1)     	# Enable the led strip
     else:
@@ -110,10 +111,10 @@ def checkSetLights():
     	GPIO.output(ledStripPin, 0)     	# Disable the led strip
     	
 def checkManualPump():
-    link = apilink + "api.php?call=date"	# Call the API to check the status
+    link = apilink + "public/api/motor/%s" % (plantID) 	# Call the API to check the status
     respone = requests.get(link)			# Receiving response
     manualPump = respone.text				# Response to variable
-    if manualPump == True:
+    if manualPump == "True":
     	print("Pump manual on!")			# Turn the pump on
     	runPump()							# Call the pump function
     else:
